@@ -1,53 +1,59 @@
+import { Dispatch } from 'redux';
+import RNFS from 'react-native-fs';
+import SVG from '../../constants/svgs';
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  View,
-  StatusBar,
-  Appearance,
-  Platform,
-} from 'react-native';
+import COLORS from '../../themes/colors';
+import { SvgXml } from 'react-native-svg';
+import { RootState } from '../../redux/store';
+import { useLazyQuery } from '@apollo/client';
 import { Header } from '../../components/Header';
 import { STRINGS } from '../../constants/strings';
-import COLORS from '../../themes/colors';
-import { RootState } from '../../redux/store';
 import { connect, useDispatch } from 'react-redux';
-import { Dispatch } from 'redux';
+import { GET_SINGLE_USER } from '../../graphql/query';
 import { SET_THEME } from '../../redux/actions/themeActions';
-import {
-  getResponsiveFontSize,
-  responsiveHeight,
-  responsiveWidth,
-  scale,
-} from '../../utils/scalingUtils';
-import SVG from '../../constants/svgs';
-import { SvgXml } from 'react-native-svg';
 import { THEME_SETTINGS_OPTIONS } from '../../utils/commonUtils';
 import { clearAll, setThemeMode } from '../../utils/storageUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { removeAuthTokenAction } from '../../redux/reducers/authReducer';
+import { StyleSheet, TouchableOpacity, Text, View, StatusBar, Appearance, Platform, Image, ScrollView, Dimensions, } from 'react-native';
+import { getResponsiveFontSize, responsiveHeight, responsiveWidth, scale, } from '../../utils/scalingUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const More = ({
-  navigation,
-  isDark,
-  themeMode,
-  setTheme,
-  colors,
-}: {
-  navigation: any;
-  isDark: any;
-  themeMode: any;
-  setTheme: any;
-  colors: any;
-}) => {
+const More = ({ navigation, isDark, themeMode, setTheme, colors, }: { navigation: any; isDark: any; themeMode: any; setTheme: any; colors: any; }) => {
   const defaultMode = THEME_SETTINGS_OPTIONS.find(
     t => t.theme === themeMode,
   )?.value;
   const [selectedThemeMode, setSelectedThemeMode] = useState(
     defaultMode || THEME_SETTINGS_OPTIONS[0]?.value,
   );
-  const [showThemeOption, setShowThemeOption] = useState(false);
+
   const dispatch = useDispatch();
+  const [SingleUser] = useLazyQuery(GET_SINGLE_USER);
+  const [imageUri, setImageUri] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
+  const [firstName, setFirstName] = React.useState('');
+  const [showThemeOption, setShowThemeOption] = useState(false);
+  const [mobileNumberInput, setMobileNumberInput] = React.useState('');
+
+  const getSingleUserDetails = async () => {
+    const mobileNumber = await AsyncStorage.getItem('mobileNumber')
+    setMobileNumberInput(mobileNumber)
+    await SingleUser({
+      variables: {
+        mobileNumber: mobileNumber
+      },
+    })
+      .then(res => {
+        setFirstName(res.data.user.firstName)
+        setLastName(res.data.user.lastName)
+        setImageUri(`${RNFS.DocumentDirectoryPath}/${res.data.user.profileImage}`)
+      })
+      .catch(err => console.log('getAllUsers err ==> ', err));
+  };
+
+  React.useEffect(() => {
+    getSingleUserDetails()
+  }, []);
 
   const renderThemeSection = () => {
     return (
@@ -139,126 +145,136 @@ const More = ({
 
   const renderSectionMenu = () => {
     return (
-      <View style={styles.sectionContentViewStyle}>
-        <View>
-          <TouchableOpacity style={styles.sectionItemViewStyle}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 75, }}>
+        <View style={styles.sectionContentViewStyle}>
+          <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+            {(imageUri !== '/data/user/0/com.englishniti/files/null') ? (
+              <Image source={{ uri: `file://${imageUri}` }} style={styles.profileImage} />
+            ) :
+              <Image style={styles.profileImage}
+                source={{ uri: ('https://static.vecteezy.com/system/resources/thumbnails/001/840/618/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg') }}
+              />}
+            <Text style={[styles.sectionItemNameStyle, { color: colors.SLIDE_TITLE_COLOR, marginTop: 10, fontWeight: '700' },]}>
+              {firstName + ' ' + lastName}
+            </Text>
+            <Text style={[styles.sectionItemNameStyle, { color: colors.SLIDE_TITLE_COLOR, fontSize: 16 },]}>
+              Mobile Number: {mobileNumberInput}
+            </Text>
+          </View>
+          <View style={{ backgroundColor: 'white'}}>
+            <TouchableOpacity style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.STATS}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sectionItemViewStyle} onPress={() => navigation.push("Profile")}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.PROFILE}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowThemeOption(!showThemeOption)}
+              style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.THEME}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            {showThemeOption ? renderThemeSection() : null}
+            <TouchableOpacity style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.CLASS_HISTORY}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.REFERRAL}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.MEMBERSHIP}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.CONTACT_US}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onSignOut}
+              style={styles.sectionItemViewStyle}>
+              <Text
+                style={[
+                  styles.sectionItemNameStyle,
+                  {
+                    color: colors.SLIDE_TITLE_COLOR,
+                  },
+                ]}>
+                {STRINGS.SIGN_OUT}
+              </Text>
+              <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
+            </TouchableOpacity>
             <Text
               style={[
-                styles.sectionItemNameStyle,
+                styles.appVersionTextStyle,
                 {
                   color: colors.SLIDE_TITLE_COLOR,
                 },
               ]}>
-              {STRINGS.STATS}
+              {`${STRINGS.APP_VERSION} v0.0.1`}
             </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sectionItemViewStyle} onPress={() => navigation.push("Profile")}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.PROFILE}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowThemeOption(!showThemeOption)}
-            style={styles.sectionItemViewStyle}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.THEME}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-          {showThemeOption ? renderThemeSection() : null}
-          <TouchableOpacity style={styles.sectionItemViewStyle}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.CLASS_HISTORY}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sectionItemViewStyle}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.REFERRAL}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
+          </View>
         </View>
-        <View>
-          <TouchableOpacity style={styles.sectionItemViewStyle}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.MEMBERSHIP}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sectionItemViewStyle}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.CONTACT_US}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            onPress={onSignOut}
-            style={styles.sectionItemViewStyle}>
-            <Text
-              style={[
-                styles.sectionItemNameStyle,
-                {
-                  color: colors.SLIDE_TITLE_COLOR,
-                },
-              ]}>
-              {STRINGS.SIGN_OUT}
-            </Text>
-            <SvgXml xml={SVG.ARROW_RIGHT_ICON} height={20} width={20} />
-          </TouchableOpacity>
-        </View>
-        <View>
-          <Text
-            style={[
-              styles.appVersionTextStyle,
-              {
-                color: colors.SLIDE_TITLE_COLOR,
-              },
-            ]}>
-            {`${STRINGS.APP_VERSION} v0.0.1`}
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     );
   };
 
@@ -315,19 +331,30 @@ const styles = StyleSheet.create({
     paddingBottom: responsiveHeight(0.5),
     height: scale(40),
     alignItems: 'flex-end',
+    paddingHorizontal: responsiveWidth(5)
   },
   sectionItemNameStyle: {
     fontSize: getResponsiveFontSize(20),
+    paddingBottom: 5
   },
   sectionContentViewStyle: {
     flex: 0.8,
-    marginHorizontal: responsiveWidth(5),
+    // marginHorizontal: responsiveWidth(5),
     marginTop: responsiveHeight(2),
     flexDirection: 'column',
     justifyContent: 'space-between',
   },
   appVersionTextStyle: {
     fontSize: getResponsiveFontSize(14),
+    margin: responsiveWidth(5),
+    textAlign: 'center'
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: 'black',
   },
 });
 

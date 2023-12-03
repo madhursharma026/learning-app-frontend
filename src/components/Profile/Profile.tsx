@@ -11,7 +11,7 @@ import DocumentPicker from 'react-native-document-picker';
 import { EditUserProfile } from '../../graphql/mutations';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image, StyleSheet, View, Button, Keyboard, Text } from 'react-native';
+import { Image, StyleSheet, View, Button, Keyboard, Text, ScrollView, TextInput } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getResponsiveFontSize, responsiveHeight } from '../../utils/scalingUtils';
 
@@ -21,6 +21,7 @@ const Profile = ({ navigation, colors }: { navigation: any; colors: any }) => {
   const [lastName, setLastName] = React.useState('');
   const [firstName, setFirstName] = React.useState('');
   const [alertData, setAlertData] = React.useState('');
+  const [mobileNumberInput, setMobileNumberInput] = React.useState('');
   const [Edit_User_Profile] = useMutation(EditUserProfile);
   const [isAlertVisible, setIsAlertVisible] = React.useState(false);
   const [errorMessageLastName, setErrorMessageLastName] = React.useState('');
@@ -28,6 +29,7 @@ const Profile = ({ navigation, colors }: { navigation: any; colors: any }) => {
 
   const getSingleUserDetails = async () => {
     const mobileNumber = await AsyncStorage.getItem('mobileNumber')
+    setMobileNumberInput(mobileNumber)
     await SingleUser({
       variables: {
         mobileNumber: mobileNumber
@@ -142,36 +144,41 @@ const Profile = ({ navigation, colors }: { navigation: any; colors: any }) => {
         :
         <></>
       }
-      <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-        <View style={{ marginHorizontal: 20 }}>
-          <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
-            {(imageUri !== '') ? (
-              <Image source={{ uri: `file://${imageUri}` }} style={styles.profileImage} />
-            ) :
-              <Image style={styles.profileImage}
-                source={{ uri: ('https://static.vecteezy.com/system/resources/thumbnails/001/840/618/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg') }}
-              />}
-            <Button title="Change" onPress={() => selectFile()} />
+      <ScrollView>
+        <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+          <View style={{ marginHorizontal: 20 }}>
+            <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+              {(imageUri !== '/data/user/0/com.englishniti/files/null') ? (
+                <Image source={{ uri: `file://${imageUri}` }} style={styles.profileImage} />
+              ) :
+                <Image style={styles.profileImage}
+                  source={{ uri: ('https://static.vecteezy.com/system/resources/thumbnails/001/840/618/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg') }}
+                />}
+              <Button title="Change" onPress={() => selectFile()} />
+            </View>
+            <View>
+              <TextInputBox inputTitle="Mobile Number" textInputProps={{ placeholder: 'Mobile Number', value: mobileNumberInput, editable: false }}
+                inputStyle={[styles.inputTextStyle, { borderBottomColor: colors.SLIDE_NOTE_COLOR, color: colors.INPUT_FIELD_COLOR, },]}
+                wrapperStyle={{ marginTop: 0 }} colors={colors} />
+            </View>
+            <View style={{ marginTop: 5 }}>
+              <TextInputBox inputTitle="First Name"
+                textInputProps={{ placeholder: 'FirstName', value: firstName, onChangeText: (text: any) => { setFirstName(text); setErrorMessageFirstName(''); }, placeholderTextColor: colors.SLIDE_NOTE_COLOR, }}
+                inputStyle={[styles.inputTextStyle, { borderBottomColor: colors.SLIDE_NOTE_COLOR, color: colors.INPUT_FIELD_COLOR, },]}
+                wrapperStyle={{ marginTop: 0 }} colors={colors} error={errorMessageFirstName ? errorMessageFirstName : ''} />
+            </View>
+            <View style={{ marginTop: 5 }}>
+              <TextInputBox inputTitle="Last Name"
+                textInputProps={{ placeholder: 'LastName', value: lastName, onChangeText: (text: any) => { setLastName(text); setErrorMessageLastName(''); }, placeholderTextColor: colors.SLIDE_NOTE_COLOR, }}
+                inputStyle={[styles.inputTextStyle, { borderBottomColor: colors.SLIDE_NOTE_COLOR, color: colors.INPUT_FIELD_COLOR, },]}
+                wrapperStyle={{ marginTop: 0 }} colors={colors} error={errorMessageLastName ? errorMessageLastName : ''} />
+            </View>
+            <View style={{ marginTop: 10 }}>
+              <Button title="Save Details" onPress={() => SaveDetails()} />
+            </View>
           </View>
-          <TextInputBox inputTitle="First Name"
-            textInputProps={{ placeholder: 'FirstName', value: firstName, onChangeText: (text: any) => { setFirstName(text); setErrorMessageFirstName(''); }, placeholderTextColor: colors.SLIDE_NOTE_COLOR, }}
-            inputStyle={[styles.inputTextStyle, { borderBottomColor: colors.SLIDE_NOTE_COLOR, color: colors.INPUT_FIELD_COLOR, },]}
-            wrapperStyle={{ marginTop: 0 }}
-            colors={colors}
-            error={errorMessageFirstName ? errorMessageFirstName : ''}
-          />
-          <View style={{ marginVertical: 20 }}>
-            <TextInputBox inputTitle="Last Name"
-              textInputProps={{ placeholder: 'LastName', value: lastName, onChangeText: (text: any) => { setLastName(text); setErrorMessageLastName(''); }, placeholderTextColor: colors.SLIDE_NOTE_COLOR, }}
-              inputStyle={[styles.inputTextStyle, { borderBottomColor: colors.SLIDE_NOTE_COLOR, color: colors.INPUT_FIELD_COLOR, },]}
-              wrapperStyle={{ marginTop: 0 }}
-              colors={colors}
-              error={errorMessageLastName ? errorMessageLastName : ''}
-            />
-          </View>
-          <Button title="Save Details" onPress={() => SaveDetails()} />
-        </View>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </ScrollView>
     </View>
 
   );
@@ -210,7 +217,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.BLACK_OPACITY_2,
     fontSize: getResponsiveFontSize(14),
-    paddingBottom: responsiveHeight(0.2),
+    marginTop: -15
+    // paddingBottom: responsiveHeight(0.2),
   },
   alertView: {
     backgroundColor: '#28A745',

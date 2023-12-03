@@ -116,7 +116,7 @@ export default function Question({ navigation, route }) {
                     },
                 })
                     .then(res => {
-                        navigation.navigate('Learn')
+                        navigation.navigate('Learn', { chapterId: Number(chapterId) })
                     })
                     .catch(err => console.log(err))
             })

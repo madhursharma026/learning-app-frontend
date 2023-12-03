@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GET_SINGLE_USER, gettingAllChapters } from '../../graphql/query';
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const Learn = ({ navigation, colors }: { navigation: any; colors: any }) => {
+const Learn = ({ navigation, colors, route }: { navigation: any; colors: any, route: any }) => {
   const [userId, setUserId] = React.useState();
   const [dataList, setDataList] = React.useState([]);
   const [allQuestions, setAllQuestions] = React.useState();
@@ -66,13 +66,33 @@ const Learn = ({ navigation, colors }: { navigation: any; colors: any }) => {
       .catch(err => Toast.show(err))
   }
 
+  // console.log(route.params)
+  React.useEffect(() => {
+    if (route.params !== undefined) {
+      const { chapterId } = route.params;
+      fetchingUserReport({
+        variables: {
+          "gettingUserId": String(userId),
+          "gettingChapterId": String(chapterId)
+        },
+      })
+        .then(res => {
+          // console.log(gettingIndex)
+          console.log(res.data.findUserReportByIds.reverse()[0].userReportChapterId)
+          const newItem = res.data.findUserReportByIds.reverse()[0].userReportChapterId
+          setDataList(prevDataList => [...prevDataList, newItem]);
+        })
+        .catch(err => Toast.show(err))
+    }
+  }, [])
+
   console.log(dataList)
 
   return (
     <View style={[styles.container, { backgroundColor: colors.SCREEN_BG_COLOR }]} onLayout={() => getAllChapters()}>
       <Header title={STRINGS.LEARN} navigation={navigation} colors={colors} />
-      <ScrollView contentContainerStyle={[styles.containerForSnakeView, { borderWidth: 10, borderBottomWidth: 0, borderColor: '#59CC00' }]}>
-        <FlatList data={allQuestions} renderItem={({ item, index }) =>
+      <FlatList data={allQuestions} style={{ marginBottom: 80, borderWidth: 10, borderBottomWidth: 0, borderColor: '#59CC00' }} renderItem={({ item, index }) =>
+        <ScrollView contentContainerStyle={[styles.containerForSnakeView, { borderWidth: 10, borderColor: 'transparent' }]}>
           <TouchableOpacity onPress={() => navigation.navigate("DescriptionScreen", { chapterId: `${item.id}` })}>
             <View onLayout={() => fetchDataCompleteORNot(item.id, index)}>
               {index % 2 === 0 ?
@@ -94,9 +114,9 @@ const Learn = ({ navigation, colors }: { navigation: any; colors: any }) => {
               }
             </View>
           </TouchableOpacity>
-        }
-        />
-      </ScrollView>
+        </ScrollView>
+      }
+      />
     </View >
   );
 };
@@ -134,7 +154,7 @@ const styles = StyleSheet.create({
   containerForSnakeView: {
     flexDirection: 'column',
     flexWrap: 'wrap',
-    height: '100%',
+    // height: '100%',
   },
   item: {
     width: '33.33%',
