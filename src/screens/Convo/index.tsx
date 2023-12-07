@@ -131,7 +131,7 @@ const Convo = ({ navigation, colors }: { navigation: any; colors: any }) => {
     })
       .catch(error => {
         Toast.show(error?.message);
-      OutGoingCallHistoryFunction()
+        OutGoingCallHistoryFunction()
       });
   }
 
@@ -141,16 +141,16 @@ const Convo = ({ navigation, colors }: { navigation: any; colors: any }) => {
 
 
   return (
-    <ScrollView>
-      <View style={[styles.container, { backgroundColor: colors.SCREEN_BG_COLOR }]}>
-        <Header title={STRINGS.CONVO} navigation={navigation} colors={colors} />
-        <View style={{ flex: 1, paddingHorizontal: 10 }}>
-          <Text style={{ fontSize: 22, paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: 'black', }}>Call Histroy</Text>
+    <View style={[styles.container, { backgroundColor: colors.SCREEN_BG_COLOR }]}>
+      <Header title={STRINGS.CONVO} navigation={navigation} colors={colors} />
+      <Text style={{ fontSize: 22, paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: 'black', paddingHorizontal: 10 }}>Call Histroy</Text>
+      <ScrollView>
+        <View style={{ flex: 1, paddingHorizontal: 10, marginBottom: 78 }}>
           <FlatList data={callDetailsIncomming} style={{ marginBottom: 0, paddingBottom: 10 }} renderItem={({ item, index }) =>
             <>
               {item.participants === 1 ?
                 <Text style={{ fontSize: 18, paddingVertical: 5 }}>{item.firstParticipantMobileNumber} {'        '}🔁{'        '} <Text style={{ textAlign: 'right' }}>Not Connected</Text></Text>
-                :                
+                :
                 <Text style={{ fontSize: 18, paddingVertical: 5 }}>{item.secondParticipantMobileNumber} {'        '}🔁{'        '} <Text style={{ textAlign: 'right' }}>Connected</Text></Text>
               }
             </>
@@ -170,8 +170,8 @@ const Convo = ({ navigation, colors }: { navigation: any; colors: any }) => {
 
           <Button title={'Get All Users'} wrapperStyle={styles.loginBtnViewStyle} />
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

@@ -57,7 +57,7 @@ const ThemeProvider = ({ setTheme }: { setTheme: any }) => {
   }, []);
 
   const httpLink = createHttpLink({
-    uri: 'http://5.39.222.149:3001/graphql',
+    uri: 'https://learn.dreamstack.com/graphql',
     // uri: 'http://192.168.0.103:3000/',
   });
   console.log('authToken ==> ', authToken);

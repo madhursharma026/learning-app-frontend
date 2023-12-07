@@ -1,7 +1,7 @@
-import {ApolloClient, InMemoryCache} from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
-  uri: 'http://5.39.222.149:3001/graphql',
+  uri: 'https://learn.dreamstack.com/graphql',
   cache: new InMemoryCache(),
 });
 

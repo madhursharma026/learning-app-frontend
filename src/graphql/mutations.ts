@@ -273,6 +273,8 @@ mutation ConnectingRoom($joinRoomArgs: JoinRoomArgs!) {
     participants
     roomName
     secondParticipantToken
+    firstParticipantMobileNumber
+    secondParticipantMobileNumber
   }
 }
 `
